@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="//select2.github.io/select2/select2-3.5.2/select2.css">
+  <link rel="stylesheet" href="../static/css/select2-bootstrap.css">
+  <link rel="stylesheet" href="../static/css/mycss.min.css">
+{% endblock %}
+
+{% block content %}
+ <div class="container" style="background-color: white; opacity: 0.9; overflow:auto;">
+
+    <div class="starter-template">
+        <h1> <b>CityGravity: California</b></h1>
+        <h3> <i>Find where to stay to reduce your time in transit</i> </h3>
+    </div>
+
+    <div class = "container">
+
+      <form  action="/output" method="GET">
+        <div class="form-group">
+          <div class="form-group">
+                     <div class="col-md-6 "  style="background-color: white; opacity: 0.85; overflow:auto; height:180px">
+          <h3>Destination</h3>
+          <label for="ID" class="control-label">Which city do you want to explore?</label>
+          <select id="ID" name="ID" class="form-control-hotel select2 form-control">
+                <option></option>
+                {% for index, r in results.iterrows() %}
+                    <option value="{{r.City}}">{{r.City}}</option>
+                {% endfor %}
+                <!--
+                {% for r in results %}
+                    <option value="{{(r[0],r[1])}}">{{r[0] +', '+ r[1]}}</option>
+                {% endfor %}
+                -->
+                </select>
+          <label for="attr_types_user" class="control-label">Choose all you are interested in (e.g., museums, parks...):</label>
+          <select id="attr_types_user" name="attr_types_user" class="form-control-attr select2 form-control" multiple="multiple">
+                <option></option>
+                {% for attr in attr_types %}
+                    <option value="{{attr}}">{{attr}}</option>
+                {% endfor %}
+          </select>
+                </div>
+         <div class="col-md-6 "  style="background-color: white; opacity: 0.85; overflow:auto; height:180px">
+            <h3>Hotel</h3>
+            <label for="stars" class="control-label">Minimum star rating:</label>
+          <select id="stars" name="stars" class="form-control-stars select2 form-control">
+                <option></option>
+                {% for r in [2,2.5,3,3.5,4,4.5,5] %}
+                    <option value="{{r}}">{{r}}</option>
+                {% endfor %}
+                </select>
+      <label for="rate" class="control-label">Maximum rate per night:</label>
+      <input type="text" class="form-control" id="rate" name="rate" placeholder="Amount, $">
+                          </div>
+                        </div>
+
+        </div>
+        
+        <p></p>
+        <div>
+          <button type="submit" class="btn btn-default btn-lg">Find the gravity center!</button>
+        </div>
+        <br><br>
+
+      </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+
+
+    <!------------------------------------- -->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//select2.github.io/select2/select2-3.5.2/select2.js"></script>
+    <script>
+      var placeholder = "City";
+
+      $( ".form-control-hotel" ).select2( { placeholder: placeholder,minimumInputLength: 0, } );
+    </script>  
+    <script>
+      var placeholder = "Choose all what you want to see";
+
+      $( ".form-control-attr" ).select2( { placeholder: placeholder,minimumInputLength: 0, } );
+    </script>  
+    <script>
+      var placeholder = " ";
+
+      $( ".form-control-stars" ).select2( { placeholder: placeholder,minimumInputLength: 0, } );
+    </script> 
+    <script>
+       function filterResults(){
+          var currstate = document.getElementById('ST');
+          window.alert(currstate.value);
+       }
+    </script>
+
+  </div> <!-- /.container-->
+{% endblock %}

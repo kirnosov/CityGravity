@@ -1,0 +1,35 @@
+body{
+  background: url('../img/6771549.jpg') ;
+  background-size:   inherit;                      /* <------ */
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+div.btest { background-color: rgba(255, 255, 255, 0.5); }
+
+.form-control-hotel .select2-choice {
+    border: 0;
+    border-radius: 2px;
+}
+
+.form-control-hotel .select2-choice .select2-arrow {
+    border-radius: 0 2px 2px 0;   
+}
+
+.form-control-hotel.select2-container {
+    height: auto !important;
+    padding: 0;
+}
+
+.form-control-hotel.select2-container.select2-dropdown-open {
+    border-color: #5897FB;
+    border-radius: 3px 3px 0 0;
+}
+
+.form-control-hotel .select2-container.select2-dropdown-open .select2-choices {
+    border-radius: 3px 3px 0 0;
+}
+
+.form-control-hotel.select2-container .select2-choices {
+    border: 0 !important;
+    border-radius: 3px;
+}

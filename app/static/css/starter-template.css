@@ -1,0 +1,23 @@
+body {
+  padding-top: 50px;
+  background: url('../static/img/millbrae-california-attractions-top.jpg');
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: left;
+}
+.one {
+    background-color:red;
+    height:100px;
+    width:50%;
+    display:inline-block;
+}
+.two {
+    background-color:blue;
+    height:100px;
+    width:50%;
+    display:inline-block;
+}
+.form-control-hotel{
+    .form-control;
+}
