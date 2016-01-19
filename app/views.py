@@ -13,15 +13,22 @@ import datetime
 import keys
 import sys
 
-
+# connect to the database
 conn = MySQLdb.connect(user=keys.SQL_user, host="localhost", db=keys.SQL_db, passwd=keys.SQL_password, 
                        charset='utf8',unix_socket="/tmp/mysql.sock")
 cur = conn.cursor()
 results = None
-sql = "SELECT DISTINCT City  FROM hotels;"
+
+# pull available cities to make the input searchable
+#sql = "SELECT DISTINCT City  FROM hotels;"
+sql = "SELECT City FROM hotels GROUP BY City;"
 results=psql.read_sql(sql, conn)
-sql='SHOW COLUMNS IN clustersobjects'
-attr_types=list(DataFrame(psql.read_sql(sql, conn)).Field[:-1]) 
+
+#sql='SHOW COLUMNS IN clustersobjects'
+#attr_types=list(DataFrame(psql.read_sql(sql, conn)).Field[:-1]) 
+sql='SELECT attraction_type FROM attr_type;'
+#attr_types=list(DataFrame(psql.read_sql(sql, conn))) 
+attr_types=list(DataFrame(psql.read_sql(sql, conn))['attraction_type'])
 attr_types.append('ALL')
 attr_types.sort()
 
@@ -57,15 +64,13 @@ def hotels_output():
 
 #  print(user_input[3], file=sys.stderr)
   cur = conn.cursor()
-  cur.callproc('make_weights', [user_input[0],"','".join(user_input[3])])
+  cur.callproc('make_weights1', [user_input[0],"','".join(user_input[3])])
 
-  cur.callproc('get_attractions', ["','".join(user_input[3])])
+  cur.callproc('get_attractions1', ["','".join(user_input[3])])
   attractions = DataFrame(cur.stored_results().next().fetchall())
-  attractions.columns =['RegionName','Latitude','Longitude','SubClassification','ClusterNum']
 
   cur.callproc('hotel_torques', [user_input[1],user_input[2]])
   hotels=DataFrame(cur.stored_results().next().fetchall())
-  hotels.columns =['EANHotelID','Name','LowRate','Latitude','Longitude','StarRating','TimeOverWeight']
 
   
   if len(hotels.index)<1: return render_template("input_wrong.html",user_input=user_input,
@@ -74,6 +79,9 @@ def hotels_output():
   if attractions.empty: return render_template("input_wrong.html",user_input=user_input,
     results=results,attr_types=attr_types,wrong_codes=['There are no attractions of this type in this area'],
     other_attr=other_attr)
+
+  attractions.columns =['RegionName','Latitude','Longitude','ClusterNum']
+  hotels.columns =['EANHotelID','Name','LowRate','Latitude','Longitude','StarRating','TimeOverWeight']
 
   number_h = 10
   h_top=hotels.sort('TimeOverWeight')[0:number_h]
