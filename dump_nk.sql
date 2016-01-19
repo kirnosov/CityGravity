@@ -409,7 +409,8 @@ FROM hotels INNER JOIN
 	INNER JOIN commutetime ON commutetime.ClusterNum=temp_attr.ClusterNum
 	GROUP BY commutetime.EANHotelID ORDER BY TimeOverWeight) tw 
 ON tw.EANHotelID=hotels.EANHotelID
-WHERE hotels.StarRating>=Stars AND hotels.LowRate BETWEEN 10 AND MaxRate;
+WHERE hotels.StarRating>=Stars AND hotels.LowRate BETWEEN 10 AND MaxRate
+ORDER BY TimeOverWeight ASC;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -467,13 +468,13 @@ CREATE  TABLE temp_attr (ClusterNum INT,Weight INT);
 SET @attraction_types = "amusement','beach','museums";
 SET @s1 = CONCAT(
 "INSERT INTO temp_attr
-	SELECT clustersobjects_long.ClusterNum, SUM(clustersobjects_long.number_of_objects)
-	FROM clustersobjects_long
-	INNER JOIN clusters ON clustersobjects_long.ClusterNum=clusters.ClusterNum
+	SELECT clustersobjects_long1.ClusterNum, SUM(clustersobjects_long1.number_of_objects)
+	FROM clustersobjects_long1
+	INNER JOIN clusters ON clustersobjects_long1.ClusterNum=clusters.ClusterNum
 	WHERE attr_type_ID IN 
 		(SELECT attr_type_ID FROM attr_type WHERE attraction_type IN ('",ATTR_STRING,"')) 
         AND clusters.City='",TheCity,
-	"' GROUP BY clustersobjects_long.ClusterNum;");
+	"' GROUP BY clustersobjects_long1.ClusterNum;");
 
 PREPARE stmt FROM @s1;
 EXECUTE stmt;
@@ -512,4 +513,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-19 14:31:36
+-- Dump completed on 2016-01-19 15:07:28
