@@ -5,20 +5,14 @@ from pandas import Series, DataFrame
 import pandas as pd
 import numpy as np
 from decimal import *
-import MySQLdb
+import mysql.connector as MySQLdb
 import pandas.io.sql as psql
 import time
 import datetime
-import urllib2
-import json
-from MySQLdb.converters import conversions
-from MySQLdb.constants import FIELD_TYPE
 
 import keys
+import sys
 
-
-conversions[FIELD_TYPE.DECIMAL] = float
-conversions[FIELD_TYPE.NEWDECIMAL] = float
 
 conn = MySQLdb.connect(user=keys.SQL_user, host="localhost", db=keys.SQL_db, passwd=keys.SQL_password, 
                        charset='utf8',unix_socket="/tmp/mysql.sock")
@@ -61,34 +55,18 @@ def hotels_output():
         results=results,attr_types=attr_types,wrong_codes=wrong_codes,
         other_attr=other_attr)
 
+#  print(user_input[3], file=sys.stderr)
   cur = conn.cursor()
-  sql='DROP TEMPORARY TABLE IF EXISTS temp_table;'
-  cur.execute(sql)
-  sql='CREATE TEMPORARY TABLE temp_table'+\
-    ' SELECT SUM(commutetime.CommuteTime*(%s)) AS TimeOverWeight, commutetime.EANHotelID FROM clustersobjects'%('+'.join(user_input[3]))+\
-    ' INNER JOIN clusters ON clustersobjects.ClusterNum=clusters.ClusterNum'+\
-    ' INNER JOIN commutetime ON commutetime.ClusterNum=clusters.ClusterNum'+\
-    ' WHERE clusters.City="%s" GROUP BY commutetime.EANHotelID ORDER BY TimeOverWeight;'%(user_input[0])
-  cur.execute(sql)
-  sql='SELECT hotels.EANHotelID,hotels.Name,hotels.LowRate,hotels.Latitude,hotels.Longitude,'+\
-    ' hotels.StarRating,temp_table.TimeOverWeight'+\
-    ' FROM hotels INNER JOIN temp_table ON temp_table.EANHotelID=hotels.EANHotelID'+\
-    ' WHERE hotels.StarRating>=%s AND hotels.LowRate BETWEEN 10 AND %s;'%(user_input[1],user_input[2])
-  hotels=DataFrame(psql.read_sql(sql, conn))
+  cur.callproc('make_weights', [user_input[0],"','".join(user_input[3])])
 
+  cur.callproc('get_attractions', ["','".join(user_input[3])])
+  attractions = DataFrame(cur.stored_results().next().fetchall())
+  attractions.columns =['RegionName','Latitude','Longitude','SubClassification','ClusterNum']
 
+  cur.callproc('hotel_torques', [user_input[1],user_input[2]])
+  hotels=DataFrame(cur.stored_results().next().fetchall())
+  hotels.columns =['EANHotelID','Name','LowRate','Latitude','Longitude','StarRating','TimeOverWeight']
 
-  sql='DROP TEMPORARY TABLE IF EXISTS temp_table;'
-  cur.execute(sql)
-  sql='CREATE TEMPORARY TABLE temp_table'+\
-    ' SELECT %s AS Weight, clustersobjects.ClusterNum FROM clustersobjects'%('+'.join(user_input[3]))+\
-    ' INNER JOIN clusters ON clustersobjects.ClusterNum=clusters.ClusterNum'+\
-    ' WHERE clusters.City="%s"'%(user_input[0])
-  cur.execute(sql)
-  sql='SELECT RegionName,Latitude,Longitude,SubClassification,attractions.ClusterNum '+\
-    ' FROM attractions INNER JOIN temp_table ON temp_table.ClusterNum=attractions.ClusterNum'+\
-    ' WHERE temp_table.Weight>0 AND SubClassification IN ("%s");'%('","'.join(user_input[3]))
-  attractions=DataFrame(psql.read_sql(sql, conn))
   
   if len(hotels.index)<1: return render_template("input_wrong.html",user_input=user_input,
     results=results,attr_types=attr_types,wrong_codes=['No accomodations found to match your request'],
@@ -97,19 +75,17 @@ def hotels_output():
     results=results,attr_types=attr_types,wrong_codes=['There are no attractions of this type in this area'],
     other_attr=other_attr)
 
-  hhh=hotels.sort('TimeOverWeight')
-  hhh_max=max(hhh[0:].TimeOverWeight)
-  hhh_mean=np.mean(hhh[0:].TimeOverWeight)
-  hhh_top=hhh[0:9].TimeOverWeight
+  number_h = 10
+  h_top=hotels.sort('TimeOverWeight')[0:number_h]
 
-  marker_lat=list(hhh[0:10].Latitude)
-  marker_lon=list(hhh[0:10].Longitude)
-  marker_ID=list(hhh[0:10].EANHotelID)
-  marker_name=list(hhh[0:10].Name)
+  marker_lat=list(h_top.Latitude)
+  marker_lon=list(h_top.Longitude)
+  marker_ID=list(h_top.EANHotelID)
+  marker_name=list(h_top.Name)
 
 
   return render_template("output.html",
-        hotels = hhh[0:10],
+        hotels = h_top,
         results=results,
         user_input=user_input,
         marker_lat=marker_lat, 
